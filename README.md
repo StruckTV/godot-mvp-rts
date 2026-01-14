@@ -31,9 +31,32 @@ This will start:
 
 The game will authenticate with the local Nakama server and show the "Void Island" menu.
 
+## Testing & Troubleshooting
+
+### Server Status Check
+If you are unsure if the server is running correctly, run the helper script in the root directory:
+
+```bash
+./check_server_status.sh
+```
+
+This script will verify:
+- Docker is installed and running.
+- The Nakama and Postgres containers are active.
+- The Nakama API is reachable.
+
+### In-Game Connection Test
+If the server seems to be running but the game isn't connecting, run the **Connection Test Scene**:
+
+1. Open the project in Godot.
+2. In the FileSystem, open `Scenes/ConnectionTest.tscn`.
+3. Press **F6** (Run Current Scene).
+
+This will display a diagnostic screen showing exactly where the connection is failing (e.g., Auth failed, Socket failed, etc.).
+
 ## Features (MVP)
 
 - **Local Backend**: Nakama + Postgres via Docker.
 - **Void Island**: Simple UI Hub.
 - **Extraction Ops**: Basic 3D scene with Threat Level timer and Extraction logic.
-- **Networking**: Connects to local Nakama instance.
+- **Networking**: Connects to local Nakama instance via `NetworkManager`.
