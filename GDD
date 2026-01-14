@@ -1,0 +1,75 @@
+# Game Design Document: Legions of the Void
+**Version:** 6.0 (Godot Migration)
+**Genre:** RTS / Extraction / Persistent MMO
+**Engine:** Godot 4 .NET (C#)
+**Backend:** Nakama (Social/Matchmaking) + Agones (Game Server Orchestration)
+**Infrastructure:** Google Cloud Platform (GKE Standard)
+
+---
+
+## 1. High Concept & Hook
+> "Raid the changing Void. Conquer the Eternal Center."
+
+* **Role:** Players act as a sentient AI Commander ("The Prototype"). They manage a persistent, safe menu hub called the **Void Island**.
+* **The Loop:** Project power into two reality layers:
+    1.  **Extraction Ops (Raids):** High-stakes looting runs into unstable, procedurally generated universes.
+    2.  **Void Breach (MMO):** A massive, persistent war zone where territory is claimed 24/7.
+* **The Golden Rule:** The Void Island is your Stash. The Map is the Risk. Resources are safe only when Recalled.
+
+---
+
+## 2. Technical Architecture (The Godot Stack)
+* **Requirement:** Support 100+ Players with Swarm Armies (5,000+ Units).
+* **Language:** C# (.NET 8.0) for all simulation code to ensure high performance.
+* **Networking Model:** Authoritative Server (Headless Godot Instance).
+
+### Rendering Strategy (The "Horde" System)
+* **Visuals:** Do **NOT** use `MeshInstance3D` nodes for units. Use `MultiMeshInstance3D` to batch render thousands of units in a single draw call.
+* **Physics:** Do **NOT** use `CharacterBody3D` nodes. Use `PhysicsServer3D` directly to manage thousands of invisible collision shapes.
+* **Benefit:** This mimics Unity DOTS performance without the complexity, allowing "Starcraft 2" density on mid-range hardware.
+
+### Backend Integration
+* **Nakama:** Handles Authentication, Chat, Guilds, and Inventory State (Void Island).
+* **Agones:** Manages the lifecycle of the Headless Godot Servers (spins them up for Raids, keeps them running for MMO sectors).
+* **Data Protocol:** Protocol Buffers (protobuf) for all Client-Server communication (bandwidth optimization).
+
+---
+
+## 3. The Meta-Game: "The Void Island"
+* **The Persistent Hub:** A UI-heavy scene (Godot Control Nodes).
+* **Function:** Inventory Screen, Crafting Bench, Tech Tree.
+* **Safety:** This zone is never attacked.
+* **Storage:** Data stored in Nakama's Postgres Database (not on the client).
+
+---
+
+## 4. Game Mode A: Extraction Ops (The Loop)
+**Purpose:** Economy Generator & Risk.
+
+### The Pressure Mechanic (Void Escalation)
+Instead of a simple "Time Limit," the universe becomes increasingly hostile the longer you stay.
+* **Threat Level 1 (0-10 mins):** Recon Drones and light skirmishers. Safe for mining.
+* **Threat Level 2 (10-20 mins):** Hunter-Killer packs and standard combat units. Mining requires defense.
+* **Threat Level 3 (20-30 mins):** "The Creator" (Police) arrives. Elite units drop in via pods. Survival is difficult.
+* **Threat Level 4 (30+ mins):** Reality Collapse. Infinite waves of enemies spawn with +50% damage buffs. Extraction becomes nearly impossible.
+
+### The Drop
+* Player warps in.
+* Server generates Procedural Map.
+
+### Gameplay
+* Players must balance "Mining Time" vs. "Enemy Threat Level."
+* Killing enemies raises the Threat Level faster (**Noise Mechanic**).
+
+### Extraction (The Recall)
+* Can be triggered at any time, but takes **30 seconds** to charge (survival holdout).
+
+---
+
+## 5. Game Mode B: Void Breach (The MMO)
+**Purpose:** Territory Control & End-Game.
+* **Map:** A static, hand-crafted "Planet" map.
+
+### Persistence
+* **Sectors:** The map is divided into hex-sectors. Each sector is a separate Godot Server instance managed by Agones.
+* **Zoning:** Players need a **"Hand-off" mechanic** (seamless zoning) so
